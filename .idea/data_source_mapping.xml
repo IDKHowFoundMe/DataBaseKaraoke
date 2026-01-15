@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="DataSourcePerFileMappings">
-    <file url="file://$PROJECT_DIR$/DDLKaraoke.sql" value="e1843ed4-c657-4df1-9337-5d74c5540b61" />
-    <file url="file://$PROJECT_DIR$/DMLKaraoke.sql" value="e1843ed4-c657-4df1-9337-5d74c5540b61" />
-  </component>
-</project>
