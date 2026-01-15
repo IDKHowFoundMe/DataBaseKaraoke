@@ -15,7 +15,9 @@ DROP TABLE IF EXISTS GENERO;
 --    "IDAGRUPACION" INTEGER PRIMARY KEY ,
 --    NOMBREAGRUPACION TEXT NOT NULL
 -- );
+
  -- Notacion MySQL
+
 CREATE TABLE AGRUPACION (
     IDAGRUPACION INT AUTO_INCREMENT PRIMARY KEY,
     NOMBREAGRUPACION VARCHAR(100) NOT NULL
@@ -64,25 +66,10 @@ CREATE TABLE ARTISTA_AGRUPACION (
     FOREIGN KEY (IDARTISTA) REFERENCES ARTISTA(IDARTISTA),
     FOREIGN KEY (IDAGRUPACION) REFERENCES AGRUPACION(IDAGRUPACION)
 );
-SELECT * FROM CANCION WHERE IDCANCION = 16;
-SELECT * FROM ARTISTA WHERE IDARTISTA = 39;
-
--- Modificaciones
-    -- Notacion cambio mas inserts
 
 -- BUSQUEDAS SIMPLES
 
--- Busqueda de Aritstas por pais especifico
-
-
-SELECT
-    a.NOMBREARTISTA,
-    a.TIPOARTISTA
-    FROM ARTISTA a
-    WHERE a.PAISARTISTA = 'España';
-
---Lista las canciones cuyos álbumes fueron lanzados un año específico.
-
+-- Lista las canciones cuyos álbumes fueron lanzados un año específico.
 SELECT
     c.NOMBRECANCION,
     al.AÑOALBUM
@@ -90,7 +77,7 @@ SELECT
     ON c.IDALBUM = al.IDALBUM
     WHERE al.AÑOALBUM = 2023;
 
---Listar todas las agrupaciones a las que pertenece cada artista.
+-- Listar todas las agrupaciones a las que pertenece cada artista.
 SELECT
     A.NOMBREARTISTA,
     G.NOMBREAGRUPACION
@@ -98,44 +85,14 @@ SELECT
        ON A.IDARTISTA = AG.IDARTISTA
        JOIN AGRUPACION G ON AG.IDAGRUPACION = G.IDAGRUPACION
        ORDER BY A.NOMBREARTISTA;
-SELECT
-    C.NOMBRECANCION
-    FROM CANCION C JOIN CANCION_ARTISTA CA on C.IDCANCION = CA.IDCANCION
-    JOIN ARTISTA A on CA.IDARTISTA = A.IDARTISTA
-    WHERE A.IDARTISTA = 5
--- agrupacion 13 sus canciones
 
-SELECT
-   C.NOMBRECANCION
-    FROM AGRUPACION AG JOIN ARTISTA_AGRUPACION AA on AG.IDAGRUPACION = AA.IDAGRUPACION
-    JOIN CANCION_ARTISTA CA on AA.IDARTISTA = CA.IDARTISTA
-    JOIN CANCION C on CA.IDCANCION = C.IDCANCION
-    JOIN ARTISTA A on CA.IDARTISTA = A.IDARTISTA
-    WHERE AA.IDAGRUPACION = 13
-    GROUP BY C.IDCANCION, C.NOMBRECANCION
-
-
-SELECT C.NOMBRECANCION
-FROM AGRUPACION AG
-JOIN ARTISTA_AGRUPACION AA ON AG.IDAGRUPACION = AA.IDAGRUPACION
-JOIN CANCION_ARTISTA CA ON AA.IDARTISTA = CA.IDARTISTA
-JOIN CANCION C ON CA.IDCANCION = C.IDCANCION
-WHERE AA.IDAGRUPACION = 13
-GROUP BY C.IDCANCION, C.NOMBRECANCION
-
-HAVING COUNT(DISTINCT AA.IDARTISTA) = (
-    SELECT COUNT(*)
-    FROM ARTISTA_AGRUPACION
-    WHERE IDAGRUPACION = 13
-);
-
---Buscar todas las canciones cuyo nombre empiece con s
+-- Buscar todas las canciones cuyo nombre empiece con s
 SELECT
     c.NOMBRECANCION
 FROM CANCION c
 WHERE c.NOMBRECANCION LIKE 's%';
 
---Buscar todas las canciones de shakira con su genero y album
+-- Buscar todas las canciones de shakira con su genero y album
 SELECT
     C.NOMBRECANCION,
     G.TIPOGENERO,
@@ -144,14 +101,16 @@ FROM CANCION C JOIN GENERO G ON C.IDGENERO = G.IDGENERO
 JOIN ALBUM  AL ON C.IDALBUM = AL.IDALBUM
 JOIN CANCION_ARTISTA CA on C.IDCANCION = CA.IDCANCION
 JOIN ARTISTA A on CA.IDARTISTA = A.IDARTISTA
-WHERE A.NOMBREARTISTA LIKE '%Shakira%';
---BUSCA CANCIONES DE REGUETON
+WHERE A.NOMBREARTISTA LIKE '%Residente%';
+
+-- BUSCA CANCIONES DE REGUETON
 SELECT
     C.NOMBRECANCION,
     G.TIPOGENERO
     FROM CANCION C JOIN GENERO G ON C.IDGENERO = G.IDGENERO
     WHERE G.TIPOGENERO = "Regueton";
----CANCIONES DE RIHANNA
+
+-- CANCIONES DE RIHANNA
 SELECT
     A.NOMBREARTISTA,
     A.PAISARTISTA,
@@ -160,7 +119,7 @@ FROM ARTISTA A JOIN CANCION_ARTISTA CA on A.IDARTISTA = CA.IDARTISTA
 JOIN CANCION C on CA.IDCANCION = C.IDCANCION
 WHERE NOMBREARTISTA = 'Rihanna';
 
---Obtener todos los álbumes creados entre LOS años (por ejemplo 2000 y 2010).
+-- Obtener todos los álbumes creados entre LOS años (por ejemplo 2000 y 2010).
 SELECT
     AL.AÑOALBUM,
     AL.NOMBREALBUM
@@ -168,10 +127,8 @@ FROM ALBUM AL
 WHERE AL.AÑOALBUM BETWEEN 2000 AND 2010
 ORDER BY AÑOALBUM;
 
---BUSQUEDAS AVANZADAS
-
-
---Obtén los artistas que han pertenecido a más de una agrupación.
+-- BUSQUEDAS AVANZADAS
+-- Obtén los artistas que han pertenecido a más de una agrupación.
 SELECT
     a.NOMBREARTISTA,
     COUNT(DISTINCT ag.NOMBREAGRUPACION) AS "Numero de AGRUPACIONES"
@@ -181,10 +138,9 @@ JOIN AGRUPACION ag ON ag.IDAGRUPACION = a_a.IDAGRUPACION
 GROUP BY a.NOMBREARTISTA
 HAVING COUNT(DISTINCT ag.NOMBREAGRUPACION) > 1;
 
---Listar artistas con su nacionalidad y el número total de canciones que han grabado.
+-- Listar artistas con su nacionalidad y el número total de canciones que han grabado.
 SELECT
     A.NOMBREARTISTA,
-    A.PAISARTISTA,
     COUNT(DISTINCT C.IDCANCION) AS CantidadCanciones
 FROM ARTISTA A
 JOIN CANCION_ARTISTA CA ON A.IDARTISTA = CA.IDARTISTA
@@ -192,7 +148,7 @@ JOIN CANCION C ON CA.IDCANCION = C.IDCANCION
 GROUP BY A.IDARTISTA, A.NOMBREARTISTA, A.PAISARTISTA
 ORDER BY A.PAISARTISTA;
 
---Cantidad de artistas en cada agrupación (bandas)
+-- Cantidad de artistas en cada agrupación (bandas)
 SELECT
     AG.NOMBREAGRUPACION,
     COUNT(DISTINCT A.IDARTISTA)
@@ -200,15 +156,15 @@ FROM ARTISTA A JOIN ARTISTA_AGRUPACION AA on A.IDARTISTA = AA.IDARTISTA
 JOIN AGRUPACION AG on AA.IDAGRUPACION = AG.IDAGRUPACION
 GROUP BY AG.NOMBREAGRUPACION;
 
---Géneros con más de 2 canciones almacenadas
+-- Géneros con más de 2 canciones almacenadas
 SELECT
     G.TIPOGENERO,
     COUNT(DISTINCT C.IDCANCION) AS CANTIDADCANCIONES
     FROM CANCION C JOIN GENERO G on C.IDGENERO = G.IDGENERO
     GROUP BY G.TIPOGENERO
-    HAVING CANTIDADCANCIONES > 2;
 
---Contar cuántos álbumes existen por año
+
+-- Contar cuántos álbumes existen por año
 SELECT
     A.AÑOALBUM,
     COUNT (DISTINCT A.NOMBREALBUM)
@@ -216,7 +172,7 @@ SELECT
     GROUP BY A.AÑOALBUM
     ORDER BY AÑOALBUM;
 
---Obtén los artistas que han cantado canciones de 2 o más géneros distintos, mostrando:
+-- Obtén los artistas que han cantado canciones de 2 o más géneros distintos, mostrando:
 SELECT
     A.NOMBREARTISTA,
     COUNT(DISTINCT  C.IDGENERO) AS NumeroGeneros
@@ -228,7 +184,7 @@ SELECT
     ORDER BY NumeroGeneros DESC;
 
 
---Genera un listado de artistas ordenado del más productivo al menos productivo,
+-- Genera un listado de artistas ordenado del más productivo al menos productivo,
 SELECT
     A.NOMBREARTISTA,
     COUNT(DISTINCT C.IDCANCION) AS Productividad
@@ -238,10 +194,3 @@ SELECT
     ORDER BY Productividad DESC;
 
 
---CRUD
-UPDATE GENERO
-SET TIPOGENERO = 'HIBRIDO'
-WHERE IDGENERO = 12;
-
-DELETE FROM GENERO
-WHERE IDGENERO =12;
