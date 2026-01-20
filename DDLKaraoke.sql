@@ -108,7 +108,7 @@ SELECT
     C.NOMBRECANCION,
     G.TIPOGENERO
     FROM CANCION C JOIN GENERO G ON C.IDGENERO = G.IDGENERO
-    WHERE G.TIPOGENERO = "Regueton";
+    WHERE G.TIPOGENERO = 'Regueton';
 
 -- CANCIONES DE RIHANNA
 SELECT
@@ -161,13 +161,13 @@ SELECT
     G.TIPOGENERO,
     COUNT(DISTINCT C.IDCANCION) AS CANTIDADCANCIONES
     FROM CANCION C JOIN GENERO G on C.IDGENERO = G.IDGENERO
-    GROUP BY G.TIPOGENERO
+    GROUP BY G.TIPOGENERO;
 
 
 -- Contar cuántos álbumes existen por año
 SELECT
     A.AÑOALBUM,
-    COUNT (DISTINCT A.NOMBREALBUM)
+    COUNT(DISTINCT A.NOMBREALBUM)
     FROM ALBUM A
     GROUP BY A.AÑOALBUM
     ORDER BY AÑOALBUM;
@@ -193,4 +193,223 @@ SELECT
     GROUP BY NOMBREARTISTA
     ORDER BY Productividad DESC;
 
+
+# Vista_1 Canciones con artista, álbum y género
+
+CREATE VIEW vw_canciones_detalle AS
+SELECT
+    c.IDCANCION,
+    c.NOMBRECANCION,
+    al.NOMBREALBUM,
+    al.AÑOALBUM,
+    g.TIPOGENERO,
+    a.NOMBREARTISTA
+FROM CANCION c
+JOIN ALBUM al ON c.IDALBUM = al.IDALBUM
+JOIN GENERO g ON c.IDGENERO = g.IDGENERO
+JOIN CANCION_ARTISTA ca ON c.IDCANCION = ca.IDCANCION
+JOIN ARTISTA a ON ca.IDARTISTA = a.IDARTISTA
+ORDER BY a.IDARTISTA;
+SELECT * FROM vw_canciones_detalle;
+
+# Vista_2 Artistas con número total de canciones
+
+CREATE VIEW vw_artistas_cantidad_canciones AS
+SELECT
+    a.IDARTISTA,
+    a.NOMBREARTISTA,
+    COUNT(ca.IDCANCION) AS TOTAL_CANCIONES
+FROM ARTISTA a
+LEFT JOIN CANCION_ARTISTA ca ON a.IDARTISTA = ca.IDARTISTA
+GROUP BY a.IDARTISTA, a.NOMBREARTISTA;
+
+SELECT * FROM vw_artistas_cantidad_canciones;
+
+# Vista_3 Agrupaciones con número de integrantes
+
+CREATE VIEW vw_agrupaciones_integrantes AS
+SELECT
+    ag.NOMBREAGRUPACION,
+    COUNT(aa.IDARTISTA) AS TOTAL_INTEGRANTES
+FROM AGRUPACION ag
+JOIN ARTISTA_AGRUPACION aa ON ag.IDAGRUPACION = aa.IDAGRUPACION
+GROUP BY ag.NOMBREAGRUPACION;
+
+SELECT * FROM vw_agrupaciones_integrantes;
+
+# Funcion_1 Cantidad de canciones de un artista
+
+DELIMITER $$
+
+CREATE FUNCTION fn_canciones_por_artista(p_id_artista INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE total INT;
+    SELECT COUNT(*) INTO total
+    FROM CANCION_ARTISTA
+    WHERE IDARTISTA = p_id_artista;
+    RETURN total;
+END$$
+
+DELIMITER ;
+
+SELECT fn_canciones_por_artista(1) AS Canciones_Adele;
+
+# Función_2 Cantidad de agrupaciones de un artista
+
+DELIMITER $$
+
+CREATE FUNCTION fn_agrupaciones_por_artista(p_id_artista INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE total INT;
+    SELECT COUNT(*) INTO total
+    FROM ARTISTA_AGRUPACION
+    WHERE IDARTISTA = p_id_artista;
+    RETURN total;
+END$$
+
+DELIMITER ;
+
+SELECT fn_agrupaciones_por_artista(47) AS Agrupaciones_Shakira;
+
+# Funcion_3 (Tabular) Canciones por género
+
+DELIMITER $$
+
+CREATE FUNCTION fn_canciones_por_genero(p_genero VARCHAR(100))
+RETURNS TABLE (
+    NombreCancion VARCHAR(100),
+    Album VARCHAR(100),
+    Artista VARCHAR(100);
+)
+DROP PROCEDURE IF EXISTS sp_canciones_por_genero;
+DELIMITER $$
+
+CREATE PROCEDURE sp_canciones_por_genero(IN p_genero VARCHAR(100))
+BEGIN
+    SELECT
+        c.NOMBRECANCION,
+        al.NOMBREALBUM,
+        a.NOMBREARTISTA
+    FROM CANCION c
+    JOIN ALBUM al ON c.IDALBUM = al.IDALBUM
+    JOIN GENERO g ON c.IDGENERO = g.IDGENERO
+    JOIN CANCION_ARTISTA ca ON c.IDCANCION = ca.IDCANCION
+    JOIN ARTISTA a ON ca.IDARTISTA = a.IDARTISTA
+    WHERE g.TIPOGENERO = p_genero;
+END$$
+
+DELIMITER ;
+
+
+CALL sp_canciones_por_genero('Pop');
+
+# Procedimientos_1 Agregación + Parámetros --- cambiar
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_resumen_artista(IN p_id_artista INT)
+BEGIN
+    SELECT
+        a.NOMBREARTISTA,
+        COUNT(ca.IDCANCION) AS TotalCanciones
+    FROM ARTISTA a
+    JOIN CANCION_ARTISTA ca ON a.IDARTISTA = ca.IDARTISTA
+    WHERE a.IDARTISTA = p_id_artista
+    GROUP BY a.NOMBREARTISTA;
+END$$
+
+DELIMITER ;
+
+CALL sp_resumen_artista(1);
+
+# Procedimiento_2 Canciones por año
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_canciones_por_anio(IN p_anio INT)
+BEGIN
+    SELECT
+        c.NOMBRECANCION,
+        al.AÑOALBUM
+    FROM CANCION c
+    JOIN ALBUM al ON c.IDALBUM = al.IDALBUM
+    WHERE al.AÑOALBUM = p_anio;
+END$$
+
+DELIMITER ;
+
+CALL sp_canciones_por_anio(2023);
+
+# procedimiento_3 listado de artistas por país
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_artistas_por_pais(IN p_pais VARCHAR(100))
+BEGIN
+    SELECT
+        NOMBREARTISTA,
+        TIPOARTISTA
+    FROM ARTISTA
+    WHERE PAISARTISTA = p_pais;
+END$$
+
+DELIMITER ;
+
+CALL sp_artistas_por_pais('Estados Unidos');
+
+# TRiggers_1 Tabla de auditoría
+
+CREATE TABLE AUDITORIA_CANCION (
+    IDAUDITORIA INT AUTO_INCREMENT PRIMARY KEY,
+    ACCION VARCHAR(50),
+    IDCANCION INT,
+    FECHA TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+#TRiggers1 After Insert
+
+DELIMITER $$
+
+CREATE TRIGGER trg_insert_cancion
+AFTER INSERT ON CANCION
+FOR EACH ROW
+BEGIN
+    INSERT INTO AUDITORIA_CANCION (ACCION, IDCANCION)
+    VALUES ('INSERT', NEW.IDCANCION);
+END$$
+
+DELIMITER ;
+
+#TRiggers_2 After Delete
+
+DELIMITER $$
+
+CREATE TRIGGER trg_delete_cancion
+AFTER DELETE ON CANCION
+FOR EACH ROW
+BEGIN
+    INSERT INTO AUDITORIA_CANCION (ACCION, IDCANCION)
+    VALUES ('DELETE', OLD.IDCANCION);
+END$$
+
+DELIMITER ;
+
+# TRigger_3 Before Insert (validacion)
+DELIMITER $$
+
+CREATE TRIGGER trg_validar_letra
+BEFORE INSERT ON CANCION
+FOR EACH ROW
+BEGIN
+    IF NEW.LETRACANCION IS NULL OR NEW.LETRACANCION = '' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La letra de la canción no puede estar vacía';
+    END IF;
+END$$
+
+DELIMITER ;
 
