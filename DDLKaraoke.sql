@@ -192,9 +192,12 @@ SELECT
     JOIN CANCION C on CA.IDCANCION = C.IDCANCION
     GROUP BY NOMBREARTISTA
     ORDER BY Productividad DESC;
+--
 
+-- OBJETIVO:
+-- Mostrar el detalle completo de las canciones incluyendo artista, álbum, año y género.
 
-# Vista_1 Canciones con artista, álbum y género
+DROP VIEW IF EXISTS vw_canciones_detalle;
 
 CREATE VIEW vw_canciones_detalle AS
 SELECT
@@ -208,11 +211,15 @@ FROM CANCION c
 JOIN ALBUM al ON c.IDALBUM = al.IDALBUM
 JOIN GENERO g ON c.IDGENERO = g.IDGENERO
 JOIN CANCION_ARTISTA ca ON c.IDCANCION = ca.IDCANCION
-JOIN ARTISTA a ON ca.IDARTISTA = a.IDARTISTA
-ORDER BY a.IDARTISTA;
+JOIN ARTISTA a ON ca.IDARTISTA = a.IDARTISTA;
+
+-- Ejecución de la vista
 SELECT * FROM vw_canciones_detalle;
 
-# Vista_2 Artistas con número total de canciones
+-- OBJETIVO:
+-- Obtener el número total de canciones que ha grabado cada artista.
+
+DROP VIEW IF EXISTS vw_artistas_cantidad_canciones;
 
 CREATE VIEW vw_artistas_cantidad_canciones AS
 SELECT
@@ -223,9 +230,14 @@ FROM ARTISTA a
 LEFT JOIN CANCION_ARTISTA ca ON a.IDARTISTA = ca.IDARTISTA
 GROUP BY a.IDARTISTA, a.NOMBREARTISTA;
 
+-- Ejecución de la vista
 SELECT * FROM vw_artistas_cantidad_canciones;
 
-# Vista_3 Agrupaciones con número de integrantes
+
+-- OBJETIVO:
+-- Mostrar las agrupaciones musicales junto con la cantidad de integrantes que poseen.
+
+DROP VIEW IF EXISTS vw_agrupaciones_integrantes;
 
 CREATE VIEW vw_agrupaciones_integrantes AS
 SELECT
@@ -235,10 +247,13 @@ FROM AGRUPACION ag
 JOIN ARTISTA_AGRUPACION aa ON ag.IDAGRUPACION = aa.IDAGRUPACION
 GROUP BY ag.NOMBREAGRUPACION;
 
+-- Ejecución de la vista
 SELECT * FROM vw_agrupaciones_integrantes;
 
-# Funcion_1 Cantidad de canciones de un artista
+-- OBJETIVO:
+-- Calcular la cantidad total de canciones grabadas por un artista específico.
 
+DROP FUNCTION IF EXISTS fn_canciones_por_artista;
 DELIMITER $$
 
 CREATE FUNCTION fn_canciones_por_artista(p_id_artista INT)
@@ -254,10 +269,13 @@ END$$
 
 DELIMITER ;
 
+-- Prueba de la función
 SELECT fn_canciones_por_artista(1) AS Canciones_Adele;
 
-# Función_2 Cantidad de agrupaciones de un artista
+-- OBJETIVO:
+-- Calcular el número de agrupaciones a las que pertenece un artista.
 
+DROP FUNCTION IF EXISTS fn_agrupaciones_por_artista;
 DELIMITER $$
 
 CREATE FUNCTION fn_agrupaciones_por_artista(p_id_artista INT)
@@ -273,18 +291,14 @@ END$$
 
 DELIMITER ;
 
+-- Prueba de la función
 SELECT fn_agrupaciones_por_artista(47) AS Agrupaciones_Shakira;
 
-# Funcion_3 (Tabular) Canciones por género
 
-DELIMITER $$
+-- OBJETIVO:
+-- Retornar un conjunto de canciones filtradas por género.
+-- En MySQL se implementa mediante un PROCEDURE debido a que no soporta funciones tabulares.
 
-CREATE FUNCTION fn_canciones_por_genero(p_genero VARCHAR(100))
-RETURNS TABLE (
-    NombreCancion VARCHAR(100),
-    Album VARCHAR(100),
-    Artista VARCHAR(100);
-)
 DROP PROCEDURE IF EXISTS sp_canciones_por_genero;
 DELIMITER $$
 
@@ -304,11 +318,13 @@ END$$
 
 DELIMITER ;
 
-
+-- Ejecución
 CALL sp_canciones_por_genero('Pop');
 
-# Procedimientos_1 Agregación + Parámetros --- cambiar
+-- OBJETIVO:
+-- Obtener un resumen de un artista mostrando el total de canciones que ha grabado.
 
+DROP PROCEDURE IF EXISTS sp_resumen_artista;
 DELIMITER $$
 
 CREATE PROCEDURE sp_resumen_artista(IN p_id_artista INT)
@@ -324,10 +340,12 @@ END$$
 
 DELIMITER ;
 
-CALL sp_resumen_artista(1);
+CALL sp_resumen_artista(4);
 
-# Procedimiento_2 Canciones por año
+-- OBJETIVO:
+-- Listar las canciones cuyos álbumes fueron lanzados en un año específico.
 
+DROP PROCEDURE IF EXISTS sp_canciones_por_anio;
 DELIMITER $$
 
 CREATE PROCEDURE sp_canciones_por_anio(IN p_anio INT)
@@ -344,8 +362,10 @@ DELIMITER ;
 
 CALL sp_canciones_por_anio(2023);
 
-# procedimiento_3 listado de artistas por país
+-- OBJETIVO:
+-- Obtener el listado de artistas según su país de origen.
 
+DROP PROCEDURE IF EXISTS sp_artistas_por_pais;
 DELIMITER $$
 
 CREATE PROCEDURE sp_artistas_por_pais(IN p_pais VARCHAR(100))
@@ -361,7 +381,11 @@ DELIMITER ;
 
 CALL sp_artistas_por_pais('Estados Unidos');
 
-# TRiggers_1 Tabla de auditoría
+-- OBJETIVO:
+-- Almacenar un historial de las inserciones y eliminaciones realizadas
+-- sobre la tabla CANCION, incluyendo la fecha.
+
+DROP TABLE IF EXISTS AUDITORIA_CANCION;
 
 CREATE TABLE AUDITORIA_CANCION (
     IDAUDITORIA INT AUTO_INCREMENT PRIMARY KEY,
@@ -370,8 +394,16 @@ CREATE TABLE AUDITORIA_CANCION (
     FECHA TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-#TRiggers1 After Insert
+DROP TRIGGER IF EXISTS trg_insert_cancion;
+DROP TRIGGER IF EXISTS trg_delete_cancion;
+DROP TRIGGER IF EXISTS trg_validar_letra;
 
+
+-- OBJETIVO:
+-- Registrar automáticamente en la tabla de auditoría cada canción
+-- que sea insertada en la tabla CANCION.
+
+DROP TRIGGER IF EXISTS trg_insert_cancion;
 DELIMITER $$
 
 CREATE TRIGGER trg_insert_cancion
@@ -384,8 +416,23 @@ END$$
 
 DELIMITER ;
 
-#TRiggers_2 After Delete
+-- OBJETIVO DE LA PRUEBA:
+-- Verificar que al insertar una canción se registre automáticamente
+-- un evento INSERT en la tabla AUDITORIA_CANCION.
 
+INSERT INTO CANCION (IDALBUM, IDGENERO, NOMBRECANCION, LETRACANCION)
+VALUES (1, 1, 'Prueba Trigger Insert', 'Letra de prueba para auditoría');
+
+-- Verificar resultado
+SELECT *
+FROM AUDITORIA_CANCION
+ORDER BY FECHA DESC;
+
+-- OBJETIVO:
+-- Registrar automáticamente en la tabla de auditoría cada canción
+-- que sea eliminada de la tabla CANCION.
+
+DROP TRIGGER IF EXISTS trg_delete_cancion;
 DELIMITER $$
 
 CREATE TRIGGER trg_delete_cancion
@@ -398,7 +445,30 @@ END$$
 
 DELIMITER ;
 
-# TRigger_3 Before Insert (validacion)
+-- OBJETIVO DE LA PRUEBA:
+-- Comprobar que al eliminar una canción se registre automáticamente
+-- un evento DELETE en la tabla AUDITORIA_CANCION.
+
+-- Identificar una canción reciente
+SELECT IDCANCION, NOMBRECANCION
+FROM CANCION
+ORDER BY IDCANCION DESC
+LIMIT 1;
+
+-- Supongamos que el IDCANCION obtenido es 150
+DELETE FROM CANCION
+WHERE IDCANCION = 96;
+
+-- Verificar auditoría
+SELECT *
+FROM AUDITORIA_CANCION
+ORDER BY FECHA DESC;
+
+-- OBJETIVO:
+-- Evitar que se inserten canciones sin letra, garantizando
+-- la integridad y calidad de los datos almacenados.
+
+DROP TRIGGER IF EXISTS trg_validar_letra;
 DELIMITER $$
 
 CREATE TRIGGER trg_validar_letra
@@ -413,3 +483,11 @@ END$$
 
 DELIMITER ;
 
+-- OBJETIVO DE LA PRUEBA:
+-- Verificar que el trigger impide insertar canciones sin letra.
+
+INSERT INTO CANCION (IDALBUM, IDGENERO, NOMBRECANCION, LETRACANCION)
+VALUES (1, 1, 'Canción inválida', '');
+
+
+SHOW TRIGGERS LIKE 'CANCION';
