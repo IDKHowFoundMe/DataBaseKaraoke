@@ -58,4 +58,77 @@ El sistema incluye **tres procedimientos almacenados**, al menos uno con **pará
    Devuelve un resumen de un artista mostrando el total de canciones que ha grabado.
 
 2. **sp_canciones_por_anio**  
-   Lista las canciones cuyos álbumes fueron lanzados en
+   Lista las canciones cuyos álbumes fueron lanzados en un año específico.
+
+3. **sp_artistas_por_pais**  
+   Muestra los artistas según su país de origen.
+
+---
+
+## 🚨 Triggers (Disparadores)
+Los triggers permiten ejecutar acciones automáticas ante eventos sobre la tabla **CANCION**, garantizando **integridad, validación y auditoría** de los datos.
+
+### 🗂️ Tabla de Auditoría
+**AUDITORIA_CANCION**  
+Almacena un registro histórico de las operaciones realizadas sobre la tabla `CANCION`, incluyendo el tipo de acción y la fecha.
+
+---
+
+### 🔹 Trigger BEFORE INSERT – Validación
+**trg_validar_letra**
+
+- Se ejecuta **antes de insertar** una canción.
+- Verifica que el campo `LETRACANCION` no sea nulo ni vacío.
+- Si la validación falla, se lanza un error y se cancela la inserción.
+
+📌 **Objetivo:**  
+Garantizar la calidad e integridad de los datos almacenados.
+
+---
+
+### 🔹 Trigger AFTER INSERT – Auditoría
+**trg_insert_cancion**
+
+- Se ejecuta **después de insertar** una canción.
+- Registra automáticamente la acción `INSERT` en la tabla de auditoría.
+
+📌 **Objetivo:**  
+Llevar un historial automático de las canciones agregadas al sistema.
+
+---
+
+### 🔹 Trigger AFTER DELETE – Auditoría
+**trg_delete_cancion**
+
+- Se ejecuta **después de eliminar** una canción.
+- Registra automáticamente la acción `DELETE` en la tabla de auditoría.
+
+📌 **Objetivo:**  
+Mantener trazabilidad y control de eliminaciones realizadas en la base de datos.
+
+---
+
+## 🧪 Pruebas
+Cada vista, función, procedimiento y trigger cuenta con scripts de prueba que permiten verificar su correcto funcionamiento, incluyendo:
+
+- Inserciones válidas e inválidas.
+- Eliminaciones controladas.
+- Consultas a la tabla de auditoría.
+- Verificación de errores lanzados por triggers de validación.
+
+---
+
+## 🛠️ Tecnologías utilizadas
+- **MySQL**
+- **DataGrip**
+- **Git / GitHub**
+
+---
+
+## 📌 Conclusión
+Este proyecto demuestra el uso de características avanzadas de bases de datos relacionales, tales como vistas, funciones, procedimientos almacenados y triggers, aplicadas a un caso realista de gestión musical.  
+La implementación garantiza integridad, reutilización de consultas, automatización y trazabilidad de la información.
+
+---
+
+📚 *Proyecto desarrollado con fines académicos.*
